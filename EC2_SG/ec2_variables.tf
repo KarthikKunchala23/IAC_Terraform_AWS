@@ -7,7 +7,7 @@ variable "instance_type" {
 variable "instance_keypair" {
   description = "ec2 instance key pair"
   type = string
-  default = "demo_key"
+  default = "terraform-key"
 }
 
 variable "private_instance_count" {
