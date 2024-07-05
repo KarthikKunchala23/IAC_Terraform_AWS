@@ -26,7 +26,7 @@ resource "null_resource" "null" {
   #local provisioner
   #create time provision when=create
   provisioner "local-exec" {
-    command = "echo VPC creation time local provisioner on ${date} and VPC ID: ${module.vpc.vpc_id} >> creation-vpc.txt"
+    command = "echo VPC creation time local provisioner on `date` and VPC ID: ${module.vpc.vpc_id} >> creation-vpc.txt"
     working_dir = "local-exec-outputs/"
     on_failure = continue
     when = create
