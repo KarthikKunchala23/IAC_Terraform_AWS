@@ -1,0 +1,1 @@
+VPC creation time local provisioner on `date` and VPC ID: vpc-03aaca55662b1f77d 
