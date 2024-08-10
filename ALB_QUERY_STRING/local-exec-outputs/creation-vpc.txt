@@ -1,0 +1,1 @@
+VPC creation time local provisioner on 2024-07-20T11:03:50Z and VPC ID: vpc-03dd32799f22e6475 
