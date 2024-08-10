@@ -1,7 +1,3 @@
-provider "aws" {
-  region = "us-east-1"
-}
-
 variable "root_domain_name" {
   type    = string
   default = "neverchoose.com"
