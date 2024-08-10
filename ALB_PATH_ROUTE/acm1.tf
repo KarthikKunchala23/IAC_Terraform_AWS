@@ -1,3 +1,7 @@
+provider "aws" {
+  region = "us-east-1"
+}
+
 variable "root_domain_name" {
   type    = string
   default = "neverchoose.com"
@@ -42,4 +46,16 @@ resource "aws_acm_certificate_validation" "certificate" {
 
 output "certificate_arn" {
   value = aws_acm_certificate.certificate.arn
+}
+
+output "route53_zone_id" {
+  value = data.aws_route53_zone.certificate_route53_zone.zone_id
+}
+
+output "domain_validation_options" {
+  value = aws_acm_certificate.certificate.domain_validation_options
+}
+
+output "validation_records" {
+  value = [for record in aws_route53_record.cert_dns : record.fqdn]
 }
