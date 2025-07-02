@@ -13,7 +13,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: terraform  # adjust if your Terraform files are elsewhere
+        working-directory: terraform/EKS  # adjust if your Terraform files are elsewhere
 
     steps:
       - name: Checkout Repository
