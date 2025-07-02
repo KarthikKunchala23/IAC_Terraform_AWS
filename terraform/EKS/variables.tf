@@ -13,6 +13,7 @@ variable "bootstrap_addons" {
 variable "vpc_id" {
   description = "The ID of the VPC where the EKS cluster will be created"
   type        = string
+  default = "eks-vpc-id"  # Replace with your actual VPC ID
   
 }
 
