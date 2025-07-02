@@ -13,8 +13,29 @@ variable "bootstrap_addons" {
 variable "vpc_id" {
   description = "The ID of the VPC where the EKS cluster will be created"
   type        = string
-  default = "eks-vpc-id"  # Replace with your actual VPC ID
-  
+
+  validation {
+    condition     = can(regex("^vpc-[a-f0-9]+$", var.vpc_id))
+    error_message = "The vpc_id must be a valid VPC ID (e.g., vpc-xxxxxxxx)."
+  }
+}
+
+variable "node_group_name" {
+  description = "The name of the EKS node group"
+  type        = string
+  default     = "eks-node-group"
+}
+
+variable "node_instance_type" {
+  description = "The instance type for the EKS nodes"
+  type        = string
+  default     = "t3.medium"
+}
+
+variable "node_group_min_size" {
+  description = "Minimum number of nodes in the EKS node group"
+  type        = number
+  default     = 2
 }
 
 variable "az1_cidr_block" {
