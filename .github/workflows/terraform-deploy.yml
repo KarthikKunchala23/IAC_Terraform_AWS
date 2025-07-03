@@ -31,6 +31,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  # update to your region
 
+      - name: Init Backend Bootstrap
+        working-directory: terraform/backend_bootstrap
+        run: terraform init
+
+      - name: Terraform Backend Plan
+        working-directory: terraform/backend_bootstrap
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Backend apply
+        working-directory: terraform/backend_bootstrap
+        run: terraform apply -auto-approve
+
+
       - name: Terraform Init
         run: terraform init
 
