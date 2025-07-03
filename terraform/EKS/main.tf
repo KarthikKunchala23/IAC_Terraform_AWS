@@ -32,7 +32,6 @@ resource "aws_eks_cluster" "cluster" {
   vpc_config {
     endpoint_private_access = true
     endpoint_public_access  = true
-    vpc_id                 = aws_vpc.main.id
 
     subnet_ids = [
       aws_subnet.az1.id,
