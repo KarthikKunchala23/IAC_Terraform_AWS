@@ -22,15 +22,15 @@ variable "bootstrap_addons" {
   default     = false
 }
 
-variable "vpc_id" {
-  description = "The ID of the VPC where the EKS cluster will be created"
-  type        = string
+# variable "vpc_id" {
+#   description = "The ID of the VPC where the EKS cluster will be created"
+#   type        = string
 
-  validation {
-    condition     = can(regex("^vpc-[a-f0-9]+$", var.vpc_id))
-    error_message = "The vpc_id must be a valid VPC ID (e.g., vpc-xxxxxxxx)."
-  }
-}
+#   validation {
+#     condition     = can(regex("^vpc-[a-f0-9]+$", var.vpc_id))
+#     error_message = "The vpc_id must be a valid VPC ID (e.g., vpc-xxxxxxxx)."
+#   }
+# }
 
 variable "node_group_name" {
   description = "The name of the EKS node group"
