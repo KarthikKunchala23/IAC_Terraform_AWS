@@ -1,0 +1,41 @@
+name: Terraform Backend s3 and DynamoDB Deploy to AWS
+
+on:
+  workflow_dispatch:  # allows manual triggering
+
+jobs:
+  terraform:
+    name: Terraform Plan and Apply
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform/backend_bootstrap  # adjust if your Terraform files are elsewhere
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6  # use the version you prefer
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1  # update to your region
+
+      - name: Init Backend Bootstrap
+        working-directory: terraform/backend_bootstrap
+        run: terraform init
+
+      - name: Terraform Backend Plan
+        working-directory: terraform/backend_bootstrap
+        run: terraform plan -out=tfplan
+
+      - name: Terraform Backend apply
+        working-directory: terraform/backend_bootstrap
+        run: terraform apply -auto-approve
