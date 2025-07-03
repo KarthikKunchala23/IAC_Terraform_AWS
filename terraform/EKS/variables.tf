@@ -4,6 +4,18 @@ variable "cluster_name" {
   default     = "eks-cluster"
 }
 
+variable "kubernetes_version" {
+  description = "The Kubernetes version for the EKS cluster"
+  type        = string
+  default     = "1.27"
+}
+
+variable "enable_cluster_autoscaler" {
+  description = "Whether to enable the cluster autoscaler"
+  type        = bool
+  default     = false
+}
+
 variable "bootstrap_addons" {
   description = "Whether to bootstrap self-managed addons"
   type        = bool
@@ -41,7 +53,7 @@ variable "node_group_min_size" {
 variable "az1_cidr_block" {
   description = "CIDR block for the first availability zone subnet"
   type        = string
-  default     = "10.0.0.0/24"
+  default     = "10.0.1.0/24"
   
 }
 
@@ -54,24 +66,31 @@ variable "az1_availability_zone" {
 variable "az2_cidr_block" {
   description = "CIDR block for the second availability zone subnet"
   type        = string
-  default     = "10.0.1.0/24"
+  default     = "10.0.2.0/24"
   
 }
 
 variable "az2_availability_zone" {
   description = "The availability zone for the second subnet"
   type        = string
-  default     = "us-east-1a"
+  default     = "us-east-1b"
 }
 
 variable "az3_cidr_block" {
   description = "CIDR block for the third availability zone subnet"
   type        = string
-  default     = "10.1.0.0/24"
+  default     = "10.0.3.0/24"
 }
 
 variable "az3_availability_zone" {
   description = "The availability zone for the third subnet"
   type        = string
-  default     = "us-east-1a"
+  default     = "us-east-1c"
+}
+
+variable "vpc_cidr_block" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+  
 }

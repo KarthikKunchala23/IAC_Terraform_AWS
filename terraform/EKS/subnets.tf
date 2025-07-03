@@ -1,3 +1,14 @@
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = "eks-vpc"
+  }
+}
+
+
+
 resource "aws_subnet" "az1" {
   vpc_id            = var.vpc_id
   cidr_block        = var.az1_cidr_block
