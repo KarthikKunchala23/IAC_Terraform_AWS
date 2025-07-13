@@ -2,9 +2,9 @@ name: Terraform Deploy to AWS
 
 on:
   workflow_dispatch:  # allows manual triggering
-  # push:
-  #   branches:
-  #     - feature/EKS-IAC
+  push:
+    branches:
+      - feature/EKS-IAC
 
 jobs:
   terraform:
