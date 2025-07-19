@@ -121,3 +121,29 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSNetworkingPolicy"
   role       = aws_iam_role.cluster.name
 }
+
+# Node group for general purpose workloads
+resource "aws_eks_node_group" "general_purpose" {
+  cluster_name    = aws_eks_cluster.cluster.name
+  node_group_name = "${var.node_group_name}-general-purpose-nodes"
+  node_role_arn   = aws_iam_role.node.arn
+
+  scaling_config {
+    desired_size = var.node_desired_size
+    max_size     = var.node_max_size
+    min_size     = var.node_min_size
+  }
+
+  subnet_ids = [
+    aws_subnet.az1.id,
+    aws_subnet.az2.id,
+    aws_subnet.az3.id,
+  ]
+
+  instance_types = var.node_instance_types
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodeMinimalPolicy,
+    aws_iam_role_policy_attachment.node_AmazonEC2ContainerRegistryPullOnly,
+  ]
+}
