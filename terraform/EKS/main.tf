@@ -73,6 +73,10 @@ resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodeMinimalPolicy
   role       = aws_iam_role.node.name
 }
 
+resource "aws_iam_role_policy_attachment" "node_AmazonEKS_CNI_Policy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
+  role       = aws_iam_role.node.name
+}
 resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryPullOnly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
   role       = aws_iam_role.node.name
@@ -123,10 +127,17 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
 }
 
 # Node group for general purpose workloads
+
+data "aws_ssm_parameter" "eks_ami_release_version" {
+  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.cluster.version}/amazon-linux-2023/x86_64/standard/recommended/release_version"
+}
+
 resource "aws_eks_node_group" "general_purpose" {
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "${var.node_group_name}-general-purpose-nodes"
   node_role_arn   = aws_iam_role.node.arn
+  version         = aws_eks_cluster.cluster.version
+  release_version = data.aws_ssm_parameter.eks_ami_release_version.value
 
   scaling_config {
     desired_size = var.node_desired_size
