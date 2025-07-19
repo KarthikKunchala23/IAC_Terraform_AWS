@@ -151,7 +151,7 @@ resource "aws_eks_node_group" "general_purpose" {
     aws_subnet.az3.id,
   ]
 
-  instance_types = var.node_instance_types
+  instance_types = var.node_instance_type
 
   depends_on = [
     aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodeMinimalPolicy,

@@ -40,14 +40,8 @@ variable "node_group_name" {
 
 variable "node_instance_type" {
   description = "The instance type for the EKS nodes"
-  type        = string
-  default     = "t3.medium"
-}
-
-variable "node_group_min_size" {
-  description = "Minimum number of nodes in the EKS node group"
-  type        = number
-  default     = 2
+  type        = list(string)
+  default     = ["t3.medium"]
 }
 
 variable "az1_cidr_block" {
@@ -113,19 +107,5 @@ variable "node_min_size" {
   description = "Minimum number of nodes in the EKS node group"
   type        = number
   default     = 1
-  
-}
-
-variable "node_instance_types" {
-  description = "List of instance types for the EKS node group"
-  type        = list(string)
-  default     = ["t3.medium", "t3.large"]
-  
-}
-
-variable "node_group_name" {
-  description = "The name of the EKS node group"
-  type        = string
-  default     = "eks-node-group"
   
 }
