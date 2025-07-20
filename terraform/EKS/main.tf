@@ -58,7 +58,7 @@ data "aws_eks_cluster_auth" "cluster" {
 
 resource "aws_eks_access_entry" "admin_access" {
   cluster_name = aws_eks_cluster.cluster.name
-  principal_arn = "arn:aws:iam::897722700244:user/karthik"
+  principal_arn = ""
   type = "STANDARD"
   kubernetes_groups = ["system:masters"]
 }
