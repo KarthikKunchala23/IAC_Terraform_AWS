@@ -168,9 +168,19 @@ resource "aws_security_group" "node_sg" {
 
 }
 
+
+data "aws_ami" "eks_worker" {
+  most_recent = true
+  owners      = ["897722700244"] # Amazon EKS AMI Account ID
+  filter {
+    name   = "name"
+    values = ["amazon-eks-node-1.31-*"]  # match the correct version
+  }
+}
+  
 resource "aws_launch_template" "eks_node_lt" {
   name_prefix   = "${var.cluster_name}-node-"
-  image_id      = data.aws_ssm_parameter.eks_ami_release_version.value
+  image_id      = data.aws_ami.eks_worker.id
   instance_type = var.node_instance_type[0]
 
 
