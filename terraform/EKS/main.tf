@@ -152,13 +152,50 @@ data "aws_ssm_parameter" "eks_ami_release_version" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.cluster.version}/amazon-linux-2023/x86_64/standard/recommended/release_version"
 }
 
+
+resource "aws_security_group" "node_sg" {
+  name        = "${var.cluster_name}-node-sg"
+  description = "Security group for EKS nodes"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_eks_cluster.cluster.vpc_config[0].cluster_security_group_id]
+  
+  }
+
+}
+
+resource "aws_launch_template" "eks_node_lt" {
+  name_prefix   = "${var.cluster_name}-node-"
+  image_id      = data.aws_ssm_parameter.eks_ami_release_version.value
+  instance_type = var.node_instance_type[0]
+
+
+  network_interfaces {
+    security_groups = [aws_security_group.node_sg.id]
+    associate_public_ip_address = false
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+  
+}
+
 resource "aws_eks_node_group" "general_purpose" {
   cluster_name    = aws_eks_cluster.cluster.name
   node_group_name = "${var.node_group_name}-general-purpose-nodes"
   node_role_arn   = aws_iam_role.node.arn
   version         = aws_eks_cluster.cluster.version
-  release_version = data.aws_ssm_parameter.eks_ami_release_version.value
+  # release_version = data.aws_ssm_parameter.eks_ami_release_version.value
 
+  launch_template {
+    id      = aws_launch_template.eks_node_lt.id
+    version = "$Latest"
+  }
   scaling_config {
     desired_size = var.node_desired_size
     max_size     = var.node_max_size
