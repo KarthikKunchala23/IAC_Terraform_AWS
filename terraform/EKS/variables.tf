@@ -41,9 +41,15 @@ variable "node_group_name" {
 variable "node_instance_type" {
   description = "The instance type for the EKS nodes"
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.medium","t3.large"]
 }
 
+variable "vpc_cidr_block" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+  
+}
 variable "az1_cidr_block" {
   description = "CIDR block for the first availability zone subnet"
   type        = string
@@ -82,11 +88,17 @@ variable "az3_availability_zone" {
   default     = "us-east-1c"
 }
 
-variable "vpc_cidr_block" {
-  description = "CIDR block for the VPC"
+variable "az4_cidr_block" {
+  description = "CIDR block for the fourth availability zone subnet"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "10.0.4.0/24"
   
+}
+
+variable "az4_availability_zone" {
+  description = "The availability zone for the fourth subnet"
+  type        = string
+  default     = "us-east-1d"
 }
 
 variable "node_desired_size" {

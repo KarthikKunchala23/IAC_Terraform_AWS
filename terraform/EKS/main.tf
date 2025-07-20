@@ -34,9 +34,8 @@ resource "aws_eks_cluster" "cluster" {
     endpoint_public_access  = true
 
     subnet_ids = [
-      aws_subnet.az1.id,
-      aws_subnet.az2.id,
       aws_subnet.az3.id,
+      aws_subnet.az4.id,
     ]
   }
 
@@ -68,8 +67,8 @@ resource "aws_iam_role" "node" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodeMinimalPolicy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+resource "aws_iam_role_policy_attachment" "node_AmazonEKSWorkerNodePolicy" {
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.node.name
 }
 
@@ -146,15 +145,15 @@ resource "aws_eks_node_group" "general_purpose" {
   }
 
   subnet_ids = [
-    aws_subnet.az1.id,
-    aws_subnet.az2.id,
     aws_subnet.az3.id,
+    aws_subnet.az4.id,
   ]
 
   instance_types = var.node_instance_type
 
   depends_on = [
-    aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodeMinimalPolicy,
+    aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node_AmazonEC2ContainerRegistryPullOnly,
+    aws_iam_role_policy_attachment.node_AmazonEKS_CNI_Policy
   ]
 }
