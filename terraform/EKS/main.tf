@@ -148,9 +148,6 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
 
 # Node group for general purpose workloads
 
-data "aws_ssm_parameter" "eks_ami_release_version" {
-  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.cluster.version}/amazon-linux-2023/x86_64/standard/recommended/release_version"
-}
 
 
 resource "aws_security_group" "node_sg" {
@@ -169,18 +166,22 @@ resource "aws_security_group" "node_sg" {
 }
 
 
-data "aws_ami" "eks_worker" {
-  most_recent = true
-  owners      = ["897722700244"] # Amazon EKS AMI Account ID
-  filter {
-    name   = "name"
-    values = ["amazon-eks-node-1.31-*"]  # match the correct version
-  }
+# data "aws_ami" "eks_worker" {
+#   most_recent = true
+#   owners      = ["897722700244"] # Amazon EKS AMI Account ID
+#   filter {
+#     name   = "name"
+#     values = ["amazon-eks-node-1.31-*"]  # match the correct version
+#   }
+# }
+
+data "aws_ssm_parameter" "eks_worker_ami" {
+  name = "/aws/service/eks/optimized-ami/1.31/amazon-linux-2023/recommended/image_id"
 }
-  
+
 resource "aws_launch_template" "eks_node_lt" {
   name_prefix   = "${var.cluster_name}-node-"
-  image_id      = data.aws_ami.eks_worker.id
+  image_id      = data.aws_ssm_parameter.eks_worker_ami.value
   instance_type = var.node_instance_type[0]
 
 
