@@ -51,6 +51,22 @@ resource "aws_eks_cluster" "cluster" {
   ]
 }
 
+resource "aws_eks_access_entry" "admin_access" {
+  cluster_name = aws_eks_cluster.cluster.name
+  principal_arn = "arn:aws:iam::897722700244:user/karthik"
+  type = "STANDARD"
+  kubernetes_groups = ["system:masters"]
+}
+
+resource "aws_eks_access_policy_association" "admin_access_policy" {
+  cluster_name = aws_eks_cluster.cluster.name
+  principal_arn = aws_eks_access_entry.admin_access.principal_arn
+  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSAdminPolicy"
+  access_scope {
+    type = "CLUSTER"
+  }
+  depends_on = [ aws_eks_access_entry.admin_access ]
+}
 resource "aws_iam_role" "node" {
   name = "eks-auto-node-example"
   assume_role_policy = jsonencode({
