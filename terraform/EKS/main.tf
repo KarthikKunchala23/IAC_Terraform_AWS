@@ -60,7 +60,7 @@ resource "aws_eks_access_entry" "admin_access" {
   cluster_name = aws_eks_cluster.cluster.name
   principal_arn = ""
   type = "STANDARD"
-  kubernetes_groups = ["system:masters"]
+  kubernetes_groups = ["eks-admins"]
 }
 
 resource "aws_eks_access_policy_association" "admin_access_policy" {
@@ -148,8 +148,8 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSNetworkingPolicy" {
 
 # Node group for general purpose workloads
 
-data "aws_ssm_parameter" "eks_ami_release_version" {
-  name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.cluster.version}/amazon-linux-2023/x86_64/standard/recommended/release_version"
+data "aws_ssm_parameter" "eks_worker_ami" {
+  name = "/aws/service/eks/optimized-ami/1.31/amazon-linux-2/recommended/image_id"
 }
 
 
@@ -180,7 +180,7 @@ resource "aws_security_group" "node_sg" {
   
 resource "aws_launch_template" "eks_node_lt" {
   name_prefix   = "${var.cluster_name}-node-"
-  image_id      = data.aws_ssm_parameter.eks_ami_release_version.value
+  image_id      = data.aws_ssm_parameter.eks_worker_ami.value
   instance_type = var.node_instance_type[0]
 
 
