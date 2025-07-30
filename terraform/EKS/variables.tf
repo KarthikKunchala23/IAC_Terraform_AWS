@@ -44,12 +44,12 @@ variable "node_instance_type" {
   default     = "t3.medium"
 }
 
-variable "node_group_min_size" {
-  description = "Minimum number of nodes in the EKS node group"
-  type        = number
-  default     = 2
+variable "vpc_cidr_block" {
+  description = "CIDR block for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+  
 }
-
 variable "az1_cidr_block" {
   description = "CIDR block for the first availability zone subnet"
   type        = string
@@ -88,9 +88,36 @@ variable "az3_availability_zone" {
   default     = "us-east-1c"
 }
 
-variable "vpc_cidr_block" {
-  description = "CIDR block for the VPC"
+variable "az4_cidr_block" {
+  description = "CIDR block for the fourth availability zone subnet"
   type        = string
-  default     = "10.0.0.0/16"
+  default     = "10.0.4.0/24"
+  
+}
+
+variable "az4_availability_zone" {
+  description = "The availability zone for the fourth subnet"
+  type        = string
+  default     = "us-east-1d"
+}
+
+variable "node_desired_size" {
+  description = "Desired number of nodes in the EKS node group"
+  type        = number
+  default     = 2
+  
+}
+
+variable "node_max_size" {
+  description = "Maximum number of nodes in the EKS node group"
+  type        = number
+  default     = 3
+  
+}
+
+variable "node_min_size" {
+  description = "Minimum number of nodes in the EKS node group"
+  type        = number
+  default     = 1
   
 }
