@@ -1,136 +1,90 @@
-resource "aws_vpc" "main" {
+resource "aws_vpc" "eks_vpc" {
   cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
   enable_dns_hostnames = true
+  enable_dns_support   = true
   tags = {
     Name = "eks-vpc"
   }
 }
 
-resource "aws_internet_gateway" "eks-igw" {
-  vpc_id = aws_vpc.main.id
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.eks_vpc.id
   tags = {
-    Name = "eks-internet-gateway"
+    Name = "eks-gw"
   }
 }
 
-resource "aws_subnet" "az1" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.az1_cidr_block
-  availability_zone = var.az1_availability_zone
+resource "aws_eip" "nat" {
+  depends_on = [aws_internet_gateway.gw]
+}
+
+resource "aws_nat_gateway" "nat_gw" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public[0].id
+  tags = {
+    Name = "eks-nat-gw"
+  }
+}
+
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.eks_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.gw.id
+  }
+
+  tags = {
+    Name = "public-rt"
+  }
+}
+
+resource "aws_route_table" "private_rt" {
+  vpc_id = aws_vpc.eks_vpc.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.nat_gw.id
+  }
+
+  tags = {
+    Name = "private-rt"
+  }
+}
+
+resource "aws_subnet" "public" {
+  count             = 2
+  vpc_id            = aws_vpc.eks_vpc.id
+  cidr_block        = cidrsubnet(aws_vpc.eks_vpc.cidr_block, 8, count.index)
+  availability_zone = ["us-east-1a", "us-east-1b"][count.index]
   map_public_ip_on_launch = true
+
   tags = {
-    Name = "eks-public-subnet-az1"
-    "kubernetes.io/role/elb" = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    Name                        = "public-${count.index}"
+    "kubernetes.io/role/elb"    = "1"
   }
-  
 }
 
-resource "aws_subnet" "az2" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.az2_cidr_block
-  availability_zone = var.az2_availability_zone
-  map_public_ip_on_launch = true
-  tags = {
-    Name = "eks-public-subnet-az2"
-    "kubernetes.io/role/elb" = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
-  
-}
+resource "aws_subnet" "private" {
+  count             = 2
+  vpc_id            = aws_vpc.eks_vpc.id
+  cidr_block        = cidrsubnet(aws_vpc.eks_vpc.cidr_block, 8, count.index + 10)
+  availability_zone = ["us-east-1a", "us-east-1b"][count.index]
 
-resource "aws_subnet" "az3" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.az3_cidr_block
-  availability_zone = var.az3_availability_zone
   tags = {
-    Name = "eks-private-subnet-az3"
+    Name                             = "private-${count.index}"
     "kubernetes.io/role/internal-elb" = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
-  
-}
-
-resource "aws_subnet" "az4" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = var.az4_cidr_block
-  availability_zone = var.az4_availability_zone
-  tags = {
-    Name = "eks-private-subnet-az4"
-    "kubernetes.io/role/internal-elb" = "1"
-    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
-  }
-  
-}
-
-# route table for public subnets
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "eks-public-route-table"
-  }
-  
-}
-
-resource "aws_route" "public_internet_route" {
-  route_table_id         = aws_route_table.public.id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.eks-igw.id
-  
-}
-
-resource "aws_route_table_association" "public_az1" {
-  subnet_id      = aws_subnet.az1.id
-  route_table_id = aws_route_table.public.id
-  
-}
-
-resource "aws_route_table_association" "public_az2" {
-  subnet_id      = aws_subnet.az2.id
-  route_table_id = aws_route_table.public.id
-  
-}
-
-resource "aws_eip" "nat-eip" {
-  domain = "vpc"
-  tags = {
-    Name = "eks-nat-eip"
   }
 }
 
-resource "aws_nat_gateway" "nat-gateway" {
-  allocation_id = aws_eip.nat-eip.id
-  subnet_id     = aws_subnet.az1.id
-  tags = {
-    Name = "eks-nat-gateway"
-  }
-  depends_on = [ aws_internet_gateway.eks-igw ]
+resource "aws_route_table_association" "public_assoc" {
+  count          = 2
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.public_rt.id
 }
 
-# route table for private subnets
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-  tags = {
-    Name = "eks-private-route-table"
-  }
-  
-}
-
-resource "aws_route" "private_nat_route" {
-  route_table_id         = aws_route_table.private.id
-  destination_cidr_block = "0.0.0.0/0"
-  nat_gateway_id         = aws_nat_gateway.nat-gateway.id 
-}
-
-resource "aws_route_table_association" "private_az3" {
-  subnet_id      = aws_subnet.az3.id
-  route_table_id = aws_route_table.private.id
-  
-}
-
-resource "aws_route_table_association" "private_az4" {
-  subnet_id      = aws_subnet.az4.id
-  route_table_id = aws_route_table.private.id
-  
+resource "aws_route_table_association" "private_assoc" {
+  count          = 2
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private_rt.id
 }

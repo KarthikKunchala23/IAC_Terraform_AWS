@@ -40,8 +40,8 @@ variable "node_group_name" {
 
 variable "node_instance_type" {
   description = "The instance type for the EKS nodes"
-  type        = list(string)
-  default     = ["t3.medium","t3.large"]
+  type        = string
+  default     = "t3.medium"
 }
 
 variable "vpc_cidr_block" {
