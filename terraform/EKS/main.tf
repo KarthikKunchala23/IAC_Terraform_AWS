@@ -24,10 +24,56 @@ resource "aws_eks_node_group" "managed" {
     min_size     = 1
   }
 
-  instance_types = ["t3.medium"]
+  launch_template {
+    id      = aws_launch_template.eks_nodes.id
+    version = "$Latest"
+  }
 
   depends_on = [
     aws_eks_cluster.eks,
     aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodePolicy
   ]
 }
+
+
+#start of launch template
+data "aws_ssm_parameter" "eks_ami" {
+  name = "/aws/service/eks/optimized-ami/${var.cluster_version}/amazon-linux-2/recommended/image_id"
+}
+
+data "aws_ami" "eks_worker" {
+  most_recent = true
+  owners      = ["602401143452"] # Amazon EKS AMI Account ID
+
+  filter {
+    name   = "image-id"
+    values = [data.aws_ssm_parameter.eks_ami.value]
+  }
+}
+
+resource "aws_launch_template" "eks_nodes" {
+  name_prefix   = "eks-nodes-"
+  image_id      = data.aws_ami.eks_worker.id
+  instance_type = var.node_instance_type
+
+  tag_specifications {
+    resource_type = "instance"
+
+    tags = {
+      Name = "eks-managed-node"
+    }
+  }
+
+  user_data = base64encode(<<-EOT
+              #!/bin/bash
+              yum install -y amazon-ssm-agent
+              systemctl enable amazon-ssm-agent
+              systemctl start amazon-ssm-agent
+              /etc/eks/bootstrap.sh ${aws_eks_cluster.eks.name} \
+                --kubelet-extra-args '--node-labels=eks-nodegroup=managed'
+              EOT
+            )
+}
+
+
+#End of launch template
