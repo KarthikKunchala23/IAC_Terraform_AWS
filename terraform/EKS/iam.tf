@@ -111,7 +111,7 @@ data "tls_certificate" "oidc_cert" {
 }
 
 resource "aws_iam_role" "karpenter_controller" {
-  name = "karpenter-controller-role"
+  name = "karpenter-controller-role-${aws_eks_cluster.eks.name}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -155,7 +155,9 @@ resource "aws_iam_policy" "karpenter_controller_policy" {
           "ec2:DescribeSpotPriceHistory",
           "ssm:GetParameter",
           "pricing:GetProducts",
-          "iam:PassRole"
+          "iam:PassRole",
+          "eks:DescribeCluster",
+          "eks:ListClusters"
         ],
         Resource = "*"
       }
@@ -179,7 +181,7 @@ resource "aws_iam_instance_profile" "karpenter_node" {
 }
 
 resource "aws_iam_role" "karpenter_node" {
-  name = "KarpenterNodeRole"
+  name = "KarpenterNodeRole-${aws_eks_cluster.eks.name}"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
