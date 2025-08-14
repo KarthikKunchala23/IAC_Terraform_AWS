@@ -77,3 +77,9 @@ resource "aws_launch_template" "eks_nodes" {
 
 
 #End of launch template
+
+
+# SQS Queue for interruption handling
+resource "aws_sqs_queue" "karpenter" {
+  name = "${var.cluster_name}-karpenter-interruption"
+}

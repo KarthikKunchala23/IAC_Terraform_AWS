@@ -4,6 +4,8 @@ resource "aws_vpc" "eks_vpc" {
   enable_dns_support   = true
   tags = {
     Name = "eks-vpc"
+    "karpenter.sh/discovery/${var.cluster_name}" = "owned"
+
   }
 }
 
@@ -62,6 +64,8 @@ resource "aws_subnet" "public" {
   tags = {
     Name                        = "public-${count.index}"
     "kubernetes.io/role/elb"    = "1"
+    "karpenter.sh/discovery/${var.cluster_name}" = "owned"
+
   }
 }
 
@@ -74,6 +78,8 @@ resource "aws_subnet" "private" {
   tags = {
     Name                             = "private-${count.index}"
     "kubernetes.io/role/internal-elb" = "1"
+    "karpenter.sh/discovery/${var.cluster_name}" = "owned"
+
   }
 }
 
