@@ -7,7 +7,9 @@ spec:
   role: "KarpenterNodeRole-demo-eks-cluster"   # <-- replace with your IAM role
   subnetSelectorTerms:
     - tags:
-        Name: "eks-private-subnet" # <-- replace with your private subnet tags
+        Name:
+        - "private-0"
+        - "private-1"
   securityGroupSelectorTerms:
     - tags:
-        Name: "eks-node-sg"        # <-- replace with your SG tags
+        Name: "eks-cluster-sg-demo-eks-cluster-1799287760"        # <-- replace with your SG tags

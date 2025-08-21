@@ -1,29 +1,18 @@
-resource "kubernetes_manifest" "aws_auth" {
-  manifest = {
-    apiVersion = "v1"
-    kind       = "ConfigMap"
-    metadata = {
-      name      = "aws-auth"
-      namespace = "kube-system"
-    }
-    data = {
-      mapRoles = yamlencode([
-        {
-          rolearn  = data.aws_iam_role.node_group_role.arn
-          username = "system:node:{{EC2PrivateDNSName}}"
-          groups   = ["system:bootstrappers", "system:nodes"]
-        },
-        {
-          rolearn  = data.aws_iam_role.eks_admin_role.arn
-          username = "eks-admin"
-          groups   = ["system:masters"]
-        }
-      ])
-    }
+resource "kubernetes_config_map_v1_data" "aws_auth_patch" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
   }
 
-  lifecycle {
-    ignore_changes = [manifest]
+  data = {
+    mapRoles = yamlencode([
+      {
+        rolearn  = data.aws_iam_role.karpenter_controller_role.arn
+        username = "karpenter"
+        groups   = ["system:masters"]
+      }
+    ])
   }
-  depends_on = [ helm_release.karpenter ]
+
+  force = true
 }
