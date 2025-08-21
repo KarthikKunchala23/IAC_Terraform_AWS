@@ -26,5 +26,4 @@ resource "kubernetes_manifest" "aws_auth" {
     ignore_changes = [manifest]
   }
   depends_on = [ helm_release.karpenter ]
-
 }
