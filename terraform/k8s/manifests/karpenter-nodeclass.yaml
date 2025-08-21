@@ -1,0 +1,15 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: default
+spec:
+  amiFamily: AL2
+  role: "KarpenterNodeRole-demo-eks-cluster"   # <-- replace with your IAM role
+  subnetSelectorTerms:
+    - tags:
+        Name:
+        - "private-0"
+        - "private-1"
+  securityGroupSelectorTerms:
+    - tags:
+        Name: "eks-cluster-sg-demo-eks-cluster-1799287760"        # <-- replace with your SG tags

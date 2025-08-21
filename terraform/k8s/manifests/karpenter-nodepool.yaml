@@ -1,0 +1,25 @@
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: default
+spec:
+  template:
+    spec:
+      nodeClassRef:
+        name: default
+      requirements:
+        - key: "karpenter.k8s.aws/instance-category"
+          operator: In
+          values: ["t", "m", "c"]   # allow T, M, C families
+        - key: "karpenter.k8s.aws/instance-generation"
+          operator: Gt
+          values: ["2"]
+        - key: "topology.kubernetes.io/zone"
+          operator: In
+          values: ["us-east-1a", "us-east-1b"]  # <-- replace with your AZs
+  disruption:
+    consolidationPolicy: WhenUnderutilized
+    expireAfter: 720h
+  scaling:
+    min: 1  # minimum number of nodes
+    max: 5 # maximum number of nodes     
