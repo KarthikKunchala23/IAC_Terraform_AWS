@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">= 1.9.6"
   backend "s3" {
     bucket         = "my-terraform-state-bucket-example-for-k8s-230798"
     key            = "k8s/terraform.tfstate"
