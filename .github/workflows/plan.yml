@@ -1,18 +1,23 @@
 name: Terraform Plan
 
 on:
-  workflow_dispatch:  # allows manual triggering
-  pull_request:
-    types: [opened]  # triggers on pull request creation and updates
+  workflow_dispatch:   # manual trigger
+  pull_request:        # run on PRs
+    paths:
+      - 'terraform/EKS/**'
+      - 'terraform/k8s/**'
 
 jobs:
   terraform:
-    name: Terraform Plan
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        dir: [terraform/EKS, terraform/k8s]  # Add more dirs as needed
 
     defaults:
       run:
-        working-directory: terraform/EKS  # adjust if your Terraform files are elsewhere
+        working-directory: ${{ matrix.dir }}
 
     steps:
       - name: Checkout Repository
@@ -21,21 +26,17 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: 1.6.6  # use the version you prefer
+          terraform_version: 1.12.2
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # update to your region
-
+          aws-region: us-east-1
 
       - name: Terraform Init
         run: terraform init
-
-      # - name: Terraform Format Check
-      #   run: terraform fmt -check
 
       - name: Terraform Validate
         run: terraform validate

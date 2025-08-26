@@ -1,0 +1,129 @@
+name: Terraform Deploy with Slack Approval
+
+on:
+  workflow_dispatch:
+
+jobs:
+  eks:
+    name: Deploy EKS Cluster
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: terraform/EKS
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        run: terraform plan -out=tfplan | tee plan.txt
+
+      - name: Send Plan for Slack Approval
+        id: slack-approve
+        uses: trstringer/slack-approve@v1
+        with:
+          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL_ID }}
+          message: |
+            *Terraform Plan for EKS*
+            ```
+            $(tail -n 30 plan.txt)
+            ```
+          approve_button_text: "✅ Approve Apply"
+          deny_button_text: "❌ Reject Apply"
+
+      - name: Terraform Apply
+        if: steps.slack-approve.outputs.approved == 'true'
+        run: terraform apply -auto-approve tfplan
+
+  k8s:
+    name: Deploy K8s Addons
+    runs-on: ubuntu-latest
+    needs: eks
+    defaults:
+      run:
+        working-directory: terraform/k8s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - run: terraform init
+      - run: terraform validate
+      - run: terraform plan -out=tfplan | tee plan.txt
+
+      - name: Send Plan for Slack Approval
+        id: slack-approve
+        uses: trstringer/slack-approve@v1
+        with:
+          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL_ID }}
+          message: |
+            *Terraform Plan for K8s Addons*
+            ```
+            $(tail -n 30 plan.txt)
+            ```
+          approve_button_text: "✅ Approve Apply"
+          deny_button_text: "❌ Reject Apply"
+
+      - name: Terraform Apply
+        if: steps.slack-approve.outputs.approved == 'true'
+        run: terraform apply -auto-approve tfplan
+
+  karpenter:
+    name: Deploy Karpenter Manifests
+    runs-on: ubuntu-latest
+    needs: k8s
+    defaults:
+      run:
+        working-directory: terraform/karpenter_manifests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.2
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - run: terraform init
+      - run: terraform validate
+      - run: terraform plan -out=tfplan | tee plan.txt
+
+      - name: Send Plan for Slack Approval
+        id: slack-approve
+        uses: trstringer/slack-approve@v1
+        with:
+          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
+          slack_channel: ${{ secrets.SLACK_CHANNEL_ID }}
+          message: |
+            *Terraform Plan for Karpenter*
+            ```
+            $(tail -n 30 plan.txt)
+            ```
+          approve_button_text: "✅ Approve Apply"
+          deny_button_text: "❌ Reject Apply"
+
+      - name: Terraform Apply
+        if: steps.slack-approve.outputs.approved == 'true'
+        run: terraform apply -auto-approve tfplan
