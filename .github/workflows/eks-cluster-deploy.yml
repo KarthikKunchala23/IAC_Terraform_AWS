@@ -133,6 +133,7 @@ jobs:
             echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
             tail plan.txt >> $GITHUB_ENV
             echo "EOF" >> $GITHUB_ENV
+            
       - name: Send Plan to Slack
         uses: slackapi/slack-github-action@v1.27.0
         with:
