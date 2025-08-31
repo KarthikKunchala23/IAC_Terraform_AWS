@@ -3,7 +3,7 @@ data "aws_eks_cluster" "cluster" {
 }
 
 data "aws_eks_cluster_auth" "eks" {
-  name = data.aws_eks_cluster.eks.name
+  name = data.aws_eks_cluster.cluster.name
 }
 
 data "aws_iam_role" "node_group_role" {
