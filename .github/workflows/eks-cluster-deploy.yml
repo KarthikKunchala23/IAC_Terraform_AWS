@@ -34,6 +34,13 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan | tee plan.txt
 
+      - name: Capture terraform plan
+        id: plan
+        run: |
+            echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+            tail plan.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
       - name: Send Plan to Slack
         uses: slackapi/slack-github-action@v1.27.0
         with:
@@ -41,7 +48,8 @@ jobs:
           slack-message: |
             *Terraform Plan for EKS*
             ```
-            $(tail -n 30 plan.txt)
+            ${{ env.PLAN_OUTPUT }}
+            
             ```
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -71,6 +79,13 @@ jobs:
       - run: terraform init
       - run: terraform validate
       - run: terraform plan -out=tfplan | tee plan.txt
+
+      - name: Capture terraform plan
+        id: plan
+        run: |
+            echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+            tail plan.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
       - name: Send Plan to Slack
         uses: slackapi/slack-github-action@v1.27.0
         with:
@@ -78,7 +93,7 @@ jobs:
           slack-message: |
             *Terraform Plan for K8s Addons*
             ```
-            $(tail -n 30 plan.txt)
+            ${{ env.PLAN_OUTPUT }}
             ```
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -111,6 +126,13 @@ jobs:
       - run: terraform init
       - run: terraform validate
       - run: terraform plan -out=tfplan | tee plan.txt
+
+      - name: Capture terraform plan
+        id: plan
+        run: |
+            echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+            tail plan.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
       - name: Send Plan to Slack
         uses: slackapi/slack-github-action@v1.27.0
         with:
@@ -118,7 +140,7 @@ jobs:
           slack-message: |
             *Terraform Plan for Karpenter*
             ```
-            $(tail -n 30 plan.txt)
+            ${{ env.PLAN_OUTPUT }}
             ```
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
