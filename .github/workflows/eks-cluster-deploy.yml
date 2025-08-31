@@ -7,6 +7,10 @@ jobs:
   eks:
     name: Deploy EKS Cluster
     runs-on: ubuntu-latest
+
+    environment:
+      name: eks-approval   # 👈 Requires approval in GitHub Environments
+      
     defaults:
       run:
         working-directory: terraform/EKS
@@ -32,28 +36,37 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -out=tfplan | tee plan.txt
 
-      - name: Send Plan for Slack Approval
-        id: slack-approve
-        uses: trstringer/slack-approve@v1
+      - name: Capture terraform plan
+        id: plan
+        run: |
+            echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+            tail plan.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Plan to Slack
+        uses: slackapi/slack-github-action@v1.27.0
         with:
-          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
-          slack_channel: ${{ secrets.SLACK_CHANNEL_ID }}
-          message: |
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
             *Terraform Plan for EKS*
             ```
-            $(tail -n 30 plan.txt)
+            ${{ env.PLAN_OUTPUT }}
+            
             ```
-          approve_button_text: "✅ Approve Apply"
-          deny_button_text: "❌ Reject Apply"
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
       - name: Terraform Apply
-        if: steps.slack-approve.outputs.approved == 'true'
         run: terraform apply -auto-approve tfplan
 
   k8s:
     name: Deploy K8s Addons
     runs-on: ubuntu-latest
     needs: eks
+
+    environment:
+      name: k8s-approval
+      
     defaults:
       run:
         working-directory: terraform/k8s
@@ -71,28 +84,32 @@ jobs:
       - run: terraform validate
       - run: terraform plan -out=tfplan | tee plan.txt
 
-      - name: Send Plan for Slack Approval
-        id: slack-approve
-        uses: trstringer/slack-approve@v1
+      - name: Capture terraform plan
+        id: plan
+        run: |
+            echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+            tail plan.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+      - name: Send Plan to Slack
+        uses: slackapi/slack-github-action@v1.27.0
         with:
-          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
-          slack_channel: ${{ secrets.SLACK_CHANNEL_ID }}
-          message: |
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
             *Terraform Plan for K8s Addons*
             ```
-            $(tail -n 30 plan.txt)
+            ${{ env.PLAN_OUTPUT }}
             ```
-          approve_button_text: "✅ Approve Apply"
-          deny_button_text: "❌ Reject Apply"
-
-      - name: Terraform Apply
-        if: steps.slack-approve.outputs.approved == 'true'
-        run: terraform apply -auto-approve tfplan
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - run: terraform apply -auto-approve tfplan
 
   karpenter:
-    name: Deploy Karpenter Manifests
+    name: Deploy Karpenter
     runs-on: ubuntu-latest
     needs: k8s
+    environment:
+      name: karpenter-approval
+      
     defaults:
       run:
         working-directory: terraform/karpenter_manifests
@@ -106,24 +123,32 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
+
+
+      - name: Configure kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }} --region ${{ secrets.AWS_REGION }}
+          
       - run: terraform init
       - run: terraform validate
       - run: terraform plan -out=tfplan | tee plan.txt
 
-      - name: Send Plan for Slack Approval
-        id: slack-approve
-        uses: trstringer/slack-approve@v1
+      - name: Capture terraform plan
+        id: plan
+        run: |
+            echo "PLAN_OUTPUT<<EOF" >> $GITHUB_ENV
+            tail plan.txt >> $GITHUB_ENV
+            echo "EOF" >> $GITHUB_ENV
+            
+      - name: Send Plan to Slack
+        uses: slackapi/slack-github-action@v1.27.0
         with:
-          slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
-          slack_channel: ${{ secrets.SLACK_CHANNEL_ID }}
-          message: |
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
             *Terraform Plan for Karpenter*
             ```
-            $(tail -n 30 plan.txt)
+            ${{ env.PLAN_OUTPUT }}
             ```
-          approve_button_text: "✅ Approve Apply"
-          deny_button_text: "❌ Reject Apply"
-
-      - name: Terraform Apply
-        if: steps.slack-approve.outputs.approved == 'true'
-        run: terraform apply -auto-approve tfplan
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+      - run: terraform apply -auto-approve tfplan
